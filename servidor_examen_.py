@@ -311,11 +311,6 @@ def respuestas_correctas():
             correctas['pregunta_' + str(p['id'])] = p.get('respuesta_correcta', '')
     return jsonify(correctas)
 
-@app.route('/examen')
-def examen_alumno():
-    server_url = request.host_url.rstrip('/')
-    return render_template('examen.html', server_url=server_url)
-
 @app.route('/imagen/<nombre>')
 def servir_imagen(nombre):
     path = os.path.join('imagenes', nombre)
@@ -541,7 +536,6 @@ if __name__ == '__main__':
     print('Direcciones disponibles:\n')
     for ip in ips:
         print(f'   -- http://{ip}:5000         \033[90m← Página principal\033[0m')
-        print(f'   -- http://{ip}:5000/examen  \033[90m← Examen para alumnos\033[0m')
         print(f'   -- http://{ip}:5000/ver     \033[90m← Resultados públicos\033[0m')
         admin_hint = ADMIN_PASS if ADMIN_PASS == 'admin123' else '(definida en variable de entorno)'
         print(f'   -- http://{ip}:5000/admin   \033[90m← Panel docente (contraseña: {admin_hint})\033[0m')
