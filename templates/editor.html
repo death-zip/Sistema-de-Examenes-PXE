@@ -35,7 +35,7 @@ input:focus,textarea:focus,select:focus { border-color: var(--verde-primario); }
 
 {% block content %}
 <nav class="nav">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png" alt="Tecmilenio" style="height:36px;filter:brightness(0) invert(1)">
+    <img src="{{ url_for('static', filename='img/tecmilenio_logo.png') }}" alt="Tecmilenio" style="height:36px;filter:brightness(0) invert(1)">
     <div class="nav-links">
         <a href="/">Inicio</a>
         <a href="/admin">← Panel</a>

@@ -17,7 +17,7 @@ button:hover { opacity: .9; }
 
 {% block content %}
 <div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png" alt="Tecmilenio" style="width:200px;margin-bottom:20px">
+    <img src="{{ url_for('static', filename='img/tecmilenio_logo.png') }}" alt="Tecmilenio" style="width:200px;margin-bottom:20px">
     <h2>Panel Docente</h2>
     {% if error %}
     <p class="err">{{ error }}</p>

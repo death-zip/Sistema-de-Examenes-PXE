@@ -469,13 +469,13 @@ def admin_descargar():
 @app.route('/')
 def home():
     total    = len(os.listdir('respuestas'))
-    logo_svg = 'https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png'
+    logo_svg = url_for('static', filename='img/tecmilenio_logo.png')
     return render_template('home.html', total=total, logo_svg=logo_svg)
 
 @app.route('/ver')
 def ver_respuestas():
     archivos = sorted(os.listdir('respuestas'))
-    logo_svg = 'https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png'
+    logo_svg = url_for('static', filename='img/tecmilenio_logo.png')
 
     if not archivos:
         return render_template('resultados_vacio.html', logo_svg=logo_svg)
