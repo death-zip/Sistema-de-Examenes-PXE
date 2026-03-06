@@ -378,6 +378,14 @@ async function enviarExamen() {
             mostrarAlerta('✅ Examen enviado correctamente', 'success');
             document.querySelectorAll('input,textarea').forEach(i => i.disabled=true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (r.status === 409) {
+            const d = await r.json();
+            btn.textContent = '⚠ Ya enviado';
+            btn.style.background = '#dc3545';
+            yaEnvio = true;
+            mostrarAlerta('🚫 ' + d.mensaje, 'error');
+            document.querySelectorAll('input,textarea').forEach(i => i.disabled=true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else { throw new Error('Error servidor'); }
     } catch(e) {
         // Aunque falle el servidor, mostrar resultado local

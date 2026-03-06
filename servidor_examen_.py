@@ -18,6 +18,33 @@ import threading
 _estado_edicion = {'editando': False, 'version': 0}
 _estado_lock = threading.Lock()
 
+# Registro de alumnos que ya enviaron (nombre normalizado -> archivo)
+_alumnos_enviaron = {}
+_envios_lock = threading.Lock()
+
+def _normalizar_nombre(nombre):
+    """Normaliza el nombre para comparacion: minusculas, sin espacios extra."""
+    return ' '.join(nombre.lower().strip().split())
+
+def _cargar_envios_previos():
+    """Carga los envios existentes en la carpeta respuestas/ al iniciar."""
+    if not os.path.exists('respuestas'):
+        return
+    for archivo in os.listdir('respuestas'):
+        if not archivo.endswith('.json'):
+            continue
+        try:
+            with open(f'respuestas/{archivo}', 'r', encoding='utf-8') as f:
+                d = json.load(f)
+            nombre = d.get('nombre', '')
+            if nombre:
+                clave = _normalizar_nombre(nombre)
+                _alumnos_enviaron[clave] = archivo
+        except:
+            continue
+
+_cargar_envios_previos()
+
 @app.route('/estado_examen')
 def estado_examen():
     return jsonify(_estado_edicion)
@@ -239,9 +266,21 @@ def config_examen():
 def guardar_respuestas():
     try:
         datos = request.json
+        nombre_raw = datos.get('nombre', 'anonimo')
+        clave = _normalizar_nombre(nombre_raw)
+
+        # Verificar si el alumno ya envió el examen
+        with _envios_lock:
+            if clave in _alumnos_enviaron:
+                print(f'[DUPLICADO] {nombre_raw} ya envió el examen')
+                return jsonify({
+                    'status': 'duplicado',
+                    'mensaje': f'Ya se registró un envío a nombre de "{nombre_raw}". Solo se permite un envío por alumno.'
+                }), 409
+
         cfg   = cargar_config()
         ts    = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-        nombre = datos.get('nombre', 'anonimo').replace(' ', '_')
+        nombre = nombre_raw.replace(' ', '_')
         correctas, total, calificacion = calcular_calificacion(
             datos.get('respuestas', {}), cfg['preguntas'])
         datos['calificacion'] = calificacion
@@ -250,6 +289,11 @@ def guardar_respuestas():
         fname = f'respuestas/examen_{nombre}_{ts}.json'
         with open(fname, 'w', encoding='utf-8') as f:
             json.dump(datos, f, indent=2, ensure_ascii=False)
+
+        # Registrar el envío para bloquear duplicados
+        with _envios_lock:
+            _alumnos_enviaron[clave] = fname
+
         print(f'[OK] {nombre} | Cal: {calificacion} ({correctas}/{total})')
         return jsonify({'status': 'ok', 'mensaje': 'Examen enviado correctamente',
                         'calificacion': calificacion, 'correctas': correctas, 'total': total})
