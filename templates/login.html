@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Admin | Tecmilenio{% endblock %}
+{% block body_class %}gradient-bg{% endblock %}
+
+{% block styles %}
+body { display: flex; align-items: center; justify-content: center; }
+.card { background: white; border-radius: 20px; padding: 50px 40px; width: 380px; box-shadow: var(--sombra-fuerte); text-align: center; }
+img { width: 180px; margin-bottom: 25px; }
+h2 { color: var(--verde-oscuro); margin-bottom: 25px; font-size: 22px; }
+input { width: 100%; padding: 14px; border: 2px solid var(--gris-borde); border-radius: 10px; font-size: 16px; margin-bottom: 15px; outline: none; }
+input:focus { border-color: var(--verde-primario); }
+button { width: 100%; padding: 15px; background: linear-gradient(135deg, var(--verde-primario), var(--verde-oscuro)); color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: 700; cursor: pointer; }
+button:hover { opacity: .9; }
+.err { color: var(--rojo); margin-bottom: 15px; font-size: 14px; }
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png" alt="Tecmilenio" style="width:200px;margin-bottom:20px">
+    <h2>Panel Docente</h2>
+    {% if error %}
+    <p class="err">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        <input type="password" name="password" placeholder="Contraseña" autofocus>
+        <button type="submit">Entrar</button>
+    </form>
+</div>
+{% endblock %}

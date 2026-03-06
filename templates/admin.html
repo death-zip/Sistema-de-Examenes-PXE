@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Panel Docente | Tecmilenio{% endblock %}
+{% block body_class %}soft-bg{% endblock %}
+
+{% block styles %}
+.container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+h1 { color: var(--verde-oscuro); margin-bottom: 25px; font-size: 28px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 35px; }
+.stat {
+    background: white; border-radius: 15px; padding: 25px; text-align: center;
+    box-shadow: var(--sombra); border-top: 5px solid var(--verde-primario);
+    cursor: pointer; transition: .2s; text-decoration: none; display: block; color: inherit;
+}
+.stat:hover { transform: translateY(-4px); }
+.stat .num { font-size: 52px; font-weight: 900; color: var(--verde-primario); }
+.stat .lbl { color: var(--gris-texto); font-size: 13px; text-transform: uppercase; letter-spacing: .5px; margin-top: 5px; }
+.actions { display: flex; gap: 15px; flex-wrap: wrap; }
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png" alt="Tecmilenio" style="height:36px;filter:brightness(0) invert(1)">
+    <div class="nav-links">
+        <a href="/">Inicio</a>
+        <a href="/admin">Panel</a>
+        <a href="/admin/examen">✏️ Editor de Examen</a>
+        <a href="/ver">Resultados</a>
+        <a href="/admin/descargar">📥 Descargar Excel</a>
+        <a href="/admin/logout">Salir</a>
+    </div>
+</nav>
+<div class="container">
+    <h1>Panel Docente</h1>
+    <div class="grid">
+        <a href="/admin/examen" class="stat">
+            <div class="num">{{ npregs }}</div>
+            <div class="lbl">Preguntas configuradas</div>
+        </a>
+        <a href="/ver" class="stat">
+            <div class="num">{{ total }}</div>
+            <div class="lbl">Respuestas recibidas</div>
+        </a>
+        <a href="/admin/examen" class="stat" style="border-top-color:var(--azul)">
+            <div class="num" style="color:var(--azul);font-size:36px">✏️</div>
+            <div class="lbl">Editar examen</div>
+        </a>
+        <a href="/admin/descargar" class="stat" style="border-top-color:var(--naranja)">
+            <div class="num" style="color:var(--naranja);font-size:36px">📥</div>
+            <div class="lbl">Descargar resultados</div>
+        </a>
+    </div>
+    <div class="actions">
+        <a href="/admin/examen" class="btn btn-green">✏️ Editar Examen</a>
+        <a href="/ver" class="btn btn-blue">Ver Resultados</a>
+        <a href="/admin/descargar" class="btn btn-orange">📥 Descargar Excel</a>
+    </div>
+</div>
+{% endblock %}

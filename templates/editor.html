@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Editor de Examen | Tecmilenio{% endblock %}
+{% block body_class %}soft-bg{% endblock %}
+
+{% block styles %}
+.container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+h1 { color: var(--verde-oscuro); margin-bottom: 20px; }
+.config-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: var(--sombra); }
+.config-card h3 { color: var(--verde-oscuro); margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid var(--verde-claro); padding-bottom: 10px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+label { display: block; font-weight: 600; color: #444; margin-bottom: 5px; font-size: 14px; }
+input[type=text],input[type=number],textarea,select { width: 100%; padding: 10px 14px; border: 2px solid var(--gris-borde); border-radius: 8px; font-size: 15px; outline: none; font-family: Arial; }
+input:focus,textarea:focus,select:focus { border-color: var(--verde-primario); }
+.pregunta-card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: var(--sombra); border-left: 5px solid var(--verde-primario); }
+.pregunta-card.abierta { border-left-color: var(--azul); }
+.pregunta-card.seleccion_multiple { border-left-color: var(--naranja); }
+.pregunta-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+.pregunta-num { background: var(--verde-primario); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.opcion-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.opcion-row input[type=text] { flex: 1; }
+.opcion-id { background: var(--verde-claro); color: var(--verde-oscuro); font-weight: 700; padding: 6px 10px; border-radius: 6px; font-size: 13px; min-width: 28px; text-align: center; }
+.tipo-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.tipo-opcion_multiple { background: var(--verde-claro); color: var(--verde-oscuro); }
+.tipo-abierta { background: var(--azul-bg); color: var(--azul); }
+.tipo-seleccion_multiple { background: var(--naranja-bg); color: var(--naranja-texto); }
+.correcta-check { accent-color: var(--verde-primario); width: 18px; height: 18px; cursor: pointer; }
+.img-preview { max-width: 200px; max-height: 120px; border-radius: 8px; margin-top: 8px; display: none; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+.save-bar { position: sticky; bottom: 20px; background: white; border-radius: 15px; padding: 15px 25px; box-shadow: 0 5px 25px rgba(0,0,0,.2); display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+.msg { padding: 10px 20px; border-radius: 8px; font-weight: 600; display: none; }
+.msg-ok { background: var(--exito-bg); color: var(--exito-texto); }
+.msg-err { background: var(--rojo-bg); color: var(--rojo-texto); }
+{% endblock %}
+
+{% block content %}
+<nav class="nav">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png" alt="Tecmilenio" style="height:36px;filter:brightness(0) invert(1)">
+    <div class="nav-links">
+        <a href="/">Inicio</a>
+        <a href="/admin">← Panel</a>
+        <a href="/ver">Resultados</a>
+        <a href="/admin/logout">Salir</a>
+    </div>
+</nav>
+<div class="container">
+    <h1>✏️ Editor de Examen</h1>
+
+    <!-- Configuración general -->
+    <div class="config-card">
+        <h3>Configuración General</h3>
+        <div class="row">
+            <div>
+                <label>Título del examen</label>
+                <input type="text" id="cfg_titulo" value="{{ cfg.titulo }}">
+            </div>
+            <div>
+                <label>Materia / Curso</label>
+                <input type="text" id="cfg_materia" value="{{ cfg.materia }}">
+            </div>
+        </div>
+        <div style="margin-top:15px;max-width:250px">
+            <label>Tiempo límite (minutos, 0 = sin límite)</label>
+            <input type="number" id="cfg_tiempo" value="{{ cfg.tiempo_minutos }}" min="0">
+        </div>
+    </div>
+
+    <!-- Barra de herramientas -->
+    <div class="toolbar">
+        <button class="btn btn-green btn-sm" onclick="agregarPregunta('opcion_multiple')">+ Opción múltiple</button>
+        <button class="btn btn-blue btn-sm" onclick="agregarPregunta('seleccion_multiple')">+ Selección múltiple</button>
+        <button class="btn btn-orange btn-sm" onclick="agregarPregunta('abierta')">+ Pregunta abierta</button>
+    </div>
+
+    <div id="preguntas-container"></div>
+
+    <div id="msg" class="msg"></div>
+
+    <div class="save-bar">
+        <span style="color:var(--gris-texto);font-size:14px">Los cambios se guardan en el servidor</span>
+        <button class="btn btn-green" style="font-size:16px;padding:14px 35px" onclick="guardarExamen()">💾 Guardar Examen</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let preguntas = {{ pregs_json|safe }};
+let nextId = preguntas.length ? Math.max(...preguntas.map(p=>p.id)) + 1 : 1;
+
+function render() {
+  const c = document.getElementById('preguntas-container');
+  c.innerHTML = '';
+  preguntas.forEach((p, idx) => c.appendChild(crearCard(p, idx)));
+}
+
+function crearCard(p, idx) {
+  const div = document.createElement('div');
+  div.className = 'pregunta-card ' + p.tipo;
+  div.id = 'preg_' + p.id;
+
+  const badges = {opcion_multiple:'Opción múltiple',seleccion_multiple:'Selección múltiple',abierta:'Pregunta abierta'};
+  const colores = {opcion_multiple:'tipo-opcion_multiple',seleccion_multiple:'tipo-seleccion_multiple',abierta:'tipo-abierta'};
+
+  let opcionesHTML = '';
+  if (p.tipo !== 'abierta') {
+    (p.opciones||[]).forEach((op, oi) => {
+      const checked = p.tipo === 'seleccion_multiple'
+        ? (Array.isArray(p.respuesta_correcta) && p.respuesta_correcta.includes(op.id) ? 'checked' : '')
+        : (p.respuesta_correcta === op.id ? 'checked' : '');
+      const inputType = p.tipo === 'seleccion_multiple' ? 'checkbox' : 'radio';
+      opcionesHTML += `
+        <div class="opcion-row">
+          <span class="opcion-id">${op.id}</span>
+          <input type="text" value="${op.texto}" onchange="editarOpcionTexto(${p.id}, ${oi}, this.value)" placeholder="Texto de la opción">
+          <input type="${inputType}" name="correcta_${p.id}" class="correcta-check" ${checked}
+            onchange="marcarCorrecta(${p.id}, '${op.id}', this.checked, '${p.tipo}')"
+            title="Marcar como correcta">
+          <button class="btn btn-red btn-sm" onclick="eliminarOpcion(${p.id}, ${oi})">✕</button>
+        </div>`;
+    });
+    opcionesHTML += `<button class="btn btn-gray btn-sm" style="margin-top:8px" onclick="agregarOpcion(${p.id})">+ Opción</button>`;
+  } else {
+    opcionesHTML = '<p style="color:var(--gris-texto);font-size:14px;font-style:italic">Pregunta de respuesta abierta — el alumno escribirá su respuesta.</p>';
+  }
+
+  // Imagen
+  const imgSrc = p.imagen ? (p.imagen.startsWith('data:') || p.imagen.startsWith('http') ? p.imagen : '/imagen/' + p.imagen) : '';
+  const imgStyle = imgSrc ? 'display:block' : 'display:none';
+
+  div.innerHTML = `
+    <div class="pregunta-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="pregunta-num">${idx+1}</div>
+        <span class="tipo-badge ${colores[p.tipo]}">${badges[p.tipo]}</span>
+        <input type="number" value="${p.puntos||1}" min="1" max="10" style="width:65px"
+          onchange="editarCampo(${p.id},'puntos',+this.value)" title="Puntos">
+        <label style="font-size:13px;color:var(--gris-texto);margin:0">pts</label>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gray btn-sm" onclick="moverPregunta(${idx},-1)" title="Subir">↑</button>
+        <button class="btn btn-gray btn-sm" onclick="moverPregunta(${idx},1)" title="Bajar">↓</button>
+        <button class="btn btn-red btn-sm" onclick="eliminarPregunta(${p.id})">Eliminar</button>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label>Pregunta</label>
+      <textarea rows="2" style="resize:vertical" onchange="editarCampo(${p.id},'texto',this.value)">${p.texto||''}</textarea>
+    </div>
+    <div style="margin-bottom:15px">
+      <label>Imagen (opcional)</label>
+      <input type="file" accept="image/*" onchange="cargarImagen(${p.id}, this)">
+      <img id="img_${p.id}" src="${imgSrc}" class="img-preview" style="${imgStyle}">
+      ${imgSrc ? '<button class="btn btn-red btn-sm" style="margin-top:5px" onclick="quitarImagen('+p.id+')">✕ Quitar imagen</button>' : ''}
+    </div>
+    <div>
+      ${p.tipo !== 'abierta' ? '<label>Opciones <small style="color:var(--gris-texto)">(marca la correcta)</small></label>' : ''}
+      ${opcionesHTML}
+    </div>`;
+  return div;
+}
+
+function editarCampo(id, campo, val) {
+  const p = preguntas.find(x=>x.id===id);
+  if (p) p[campo] = val;
+}
+function editarOpcionTexto(id, oi, val) {
+  const p = preguntas.find(x=>x.id===id);
+  if (p && p.opciones) p.opciones[oi].texto = val;
+}
+function marcarCorrecta(id, opId, checked, tipo) {
+  const p = preguntas.find(x=>x.id===id);
+  if (!p) return;
+  if (tipo === 'seleccion_multiple') {
+    if (!Array.isArray(p.respuesta_correcta)) p.respuesta_correcta = [];
+    if (checked) { if (!p.respuesta_correcta.includes(opId)) p.respuesta_correcta.push(opId); }
+    else p.respuesta_correcta = p.respuesta_correcta.filter(x=>x!==opId);
+  } else {
+    p.respuesta_correcta = opId;
+  }
+}
+function agregarOpcion(id) {
+  const p = preguntas.find(x=>x.id===id);
+  if (!p) return;
+  const ids = ['a','b','c','d','e','f','g','h'];
+  const nextOp = ids[p.opciones.length] || String.fromCharCode(97+p.opciones.length);
+  p.opciones.push({id: nextOp, texto: ''});
+  render();
+}
+function eliminarOpcion(id, oi) {
+  const p = preguntas.find(x=>x.id===id);
+  if (p) p.opciones.splice(oi, 1);
+  render();
+}
+function eliminarPregunta(id) {
+  if (!confirm('¿Eliminar esta pregunta?')) return;
+  preguntas = preguntas.filter(x=>x.id!==id);
+  render();
+}
+function moverPregunta(idx, dir) {
+  const ni = idx + dir;
+  if (ni < 0 || ni >= preguntas.length) return;
+  [preguntas[idx], preguntas[ni]] = [preguntas[ni], preguntas[idx]];
+  render();
+}
+function agregarPregunta(tipo) {
+  const base = {id: nextId++, tipo, texto:'', imagen:'', puntos:1};
+  if (tipo !== 'abierta') {
+    base.opciones = [
+      {id:'a', texto:''}, {id:'b', texto:''},
+      {id:'c', texto:''}, {id:'d', texto:''}
+    ];
+    base.respuesta_correcta = tipo === 'seleccion_multiple' ? [] : 'a';
+  }
+  preguntas.push(base);
+  render();
+  setTimeout(()=>document.getElementById('preg_'+base.id)?.scrollIntoView({behavior:'smooth'}), 100);
+}
+function cargarImagen(id, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const p = preguntas.find(x=>x.id===id);
+    if (p) p.imagen = e.target.result;
+    const img = document.getElementById('img_'+id);
+    if (img) { img.src = e.target.result; img.style.display='block'; }
+  };
+  reader.readAsDataURL(file);
+}
+function quitarImagen(id) {
+  const p = preguntas.find(x=>x.id===id);
+  if (p) p.imagen = '';
+  render();
+}
+function showMsg(txt, ok) {
+  const el = document.getElementById('msg');
+  el.textContent = txt;
+  el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+async function guardarExamen() {
+  // Actualizar textos de textareas (onchange no siempre dispara)
+  preguntas.forEach(p => {
+    const card = document.getElementById('preg_'+p.id);
+    if (card) {
+      const ta = card.querySelector('textarea');
+      if (ta) p.texto = ta.value;
+    }
+  });
+  const cfg = {
+    titulo: document.getElementById('cfg_titulo').value,
+    materia: document.getElementById('cfg_materia').value,
+    tiempo_minutos: parseInt(document.getElementById('cfg_tiempo').value)||0,
+    preguntas
+  };
+  try {
+    const r = await fetch('/admin/guardar_config', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(cfg)
+    });
+    const d = await r.json();
+    showMsg(d.ok ? 'Examen guardado correctamente' : 'Error: ' + d.error, d.ok);
+  } catch(e) {
+    showMsg('Error al guardar: ' + e.message, false);
+  }
+}
+render();
+
+// Avisar al servidor que el docente esta editando
+async function notificarEditando(estado) {
+    try {
+        await fetch('/admin/set_editando', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            credentials: 'include',
+            body: JSON.stringify({editando: estado})
+        });
+    } catch(e) {}
+}
+
+// Activar modo edicion al primer cambio
+let modoEdicionActivo = false;
+document.addEventListener('input', function() {
+    if (!modoEdicionActivo) {
+        modoEdicionActivo = true;
+        notificarEditando(true);
+    }
+}, true);
+
+// Desactivar si cierra la pestana sin guardar
+window.addEventListener('beforeunload', function() {
+    notificarEditando(false);
+});
+</script>
+{% endblock %}

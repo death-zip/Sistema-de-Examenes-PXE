@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados | Tecmilenio{% endblock %}
+
+{% block extra_head %}
+<meta http-equiv="refresh" content="15">
+{% endblock %}
+
+{% block styles %}
+body { background: linear-gradient(135deg, var(--verde-claro), var(--verde-fondo)); min-height: 100vh; padding: 25px 20px; }
+.container { max-width: 1100px; margin: 0 auto; }
+.header { background: linear-gradient(135deg, var(--verde-primario), var(--verde-oscuro)); color: white; padding: 25px 35px; border-radius: 15px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; box-shadow: 0 5px 20px rgba(0,168,89,.3); }
+.header img { height: 45px; }
+.header h1 { font-size: 28px; margin: 0; }
+.badge { background: rgba(255,255,255,.2); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; margin-bottom: 25px; }
+.stat { background: white; border-radius: 12px; padding: 22px; text-align: center; box-shadow: 0 3px 12px rgba(0,0,0,.08); border-top: 5px solid var(--verde-primario); transition: .2s; }
+.stat:hover { transform: translateY(-3px); }
+.stat.v { border-top-color: var(--exito); }
+.stat.r { border-top-color: var(--rojo); }
+.stat.o { border-top-color: var(--naranja); }
+.snum { font-size: 48px; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+.slbl { color: var(--gris-texto); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+.barra-wrap { background: white; border-radius: 12px; padding: 20px 25px; margin-bottom: 25px; box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+.barra-track { background: #e9ecef; border-radius: 10px; height: 14px; overflow: hidden; }
+.barra-fill { height: 100%; background: linear-gradient(90deg, var(--verde-primario), var(--exito)); border-radius: 10px; width: {{ pct }}%; }
+.table-wrap { background: white; border-radius: 12px; box-shadow: 0 3px 12px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 25px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: linear-gradient(135deg, var(--verde-primario), var(--verde-oscuro)); color: white; padding: 16px 20px; text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; }
+tr:hover td { background: var(--verde-fondo); }
+td { padding: 14px 20px; border-bottom: 1px solid #f0f0f0; }
+.footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: white; border-radius: 12px; padding: 15px 25px; box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+a { color: var(--verde-primario); text-decoration: none; font-weight: 700; }
+a:hover { text-decoration: underline; }
+.refresh { color: #aaa; font-size: 13px; }
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:20px">
+            <div style="background:white;border-radius:8px;padding:5px 12px;display:inline-flex;align-items:center">
+                <img src="{{ logo_svg }}" style="height:38px">
+            </div>
+            <div>
+                <h1>Resultados del Examen</h1>
+                <span class="badge">GESTIÓN DE REDES 2026</span>
+            </div>
+        </div>
+        <a href="/admin/descargar" style="background:rgba(255,255,255,.15);color:white;padding:10px 20px;border-radius:25px;font-weight:700;text-decoration:none">📥 Descargar Excel</a>
+    </div>
+    <div class="grid">
+        <div class="stat"><div class="snum" style="color:var(--verde-primario)">{{ total_alumnos }}</div><div class="slbl">Alumnos</div></div>
+        <div class="stat"><div class="snum" style="color:{{ cp }}">{{ promedio }}</div><div class="slbl">Promedio</div></div>
+        <div class="stat v"><div class="snum" style="color:var(--exito)">{{ aprobados }}</div><div class="slbl">Aprobados</div></div>
+        <div class="stat r"><div class="snum" style="color:var(--rojo)">{{ reprobados }}</div><div class="slbl">Reprobados</div></div>
+        <div class="stat o"><div class="snum" style="color:var(--naranja)">{{ pct }}%</div><div class="slbl">% Aprobacion</div></div>
+    </div>
+    <div class="barra-wrap">
+        <div style="font-size:13px;color:var(--gris-texto);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Tasa de aprobación</div>
+        <div class="barra-track"><div class="barra-fill"></div></div>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <tr>
+                <th>Nombre</th>
+                <th style="text-align:center">Calificacion</th>
+                <th style="text-align:center">Correctas</th>
+                <th>Fecha y Hora</th>
+            </tr>
+            {% for alumno in alumnos %}
+            <tr>
+                <td style="font-weight:600">{{ alumno.nombre }}</td>
+                <td style="text-align:center">
+                    {% if alumno.cal is not none %}
+                    <div style="display:inline-flex;align-items:center;gap:8px">
+                        <span style="color:{{ alumno.color }};font-weight:900;font-size:24px">{{ alumno.cal }}</span>
+                        <span style="background:{{ alumno.bg }};color:{{ alumno.color }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700">{{ alumno.estado }}</span>
+                    </div>
+                    {% else %}
+                    <span style="color:#aaa;font-style:italic">Sin calificación</span>
+                    {% endif %}
+                </td>
+                <td style="text-align:center;font-weight:600">{{ alumno.correctas }}<span style="color:#aaa">/{{ alumno.total }}</span></td>
+                <td style="color:#aaa;font-size:13px">{{ alumno.fecha }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="footer">
+        <div style="display:flex;gap:20px;align-items:center">
+            <a href="/">← Inicio</a>
+            <span style="color:#ddd">|</span>
+            <a href="/admin">Panel Docente</a>
+        </div>
+        <span class="refresh">Se actualiza cada 15 segundos</span>
+    </div>
+</div>
+{% endblock %}

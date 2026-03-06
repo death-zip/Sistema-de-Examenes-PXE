@@ -1,0 +1,89 @@
+/* ── Variables y Reset ──────────────────────────────────── */
+:root {
+    --verde-primario: #00A859;
+    --verde-oscuro: #007A3D;
+    --verde-claro: #e8f5e9;
+    --verde-fondo: #f0f9f4;
+    --exito: #28a745;
+    --exito-bg: #d4edda;
+    --exito-texto: #155724;
+    --naranja: #fd7e14;
+    --naranja-bg: #fff3cd;
+    --naranja-texto: #856404;
+    --rojo: #dc3545;
+    --rojo-bg: #f8d7da;
+    --rojo-texto: #721c24;
+    --azul: #0d6efd;
+    --azul-bg: #dbeafe;
+    --gris-texto: #888;
+    --gris-borde: #ddd;
+    --sombra: 0 3px 15px rgba(0,0,0,.08);
+    --sombra-fuerte: 0 20px 60px rgba(0,0,0,.3);
+    --logo-url: url('https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png');
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; }
+
+/* ── Fondos reutilizables ──────────────────────────────── */
+.gradient-bg {
+    background: linear-gradient(135deg, var(--verde-primario), var(--verde-oscuro));
+    min-height: 100vh;
+}
+
+.soft-bg {
+    background: var(--verde-fondo);
+    min-height: 100vh;
+}
+
+/* ── Navbar compartida (admin) ─────────────────────────── */
+.nav {
+    background: linear-gradient(135deg, var(--verde-primario), var(--verde-oscuro));
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+}
+.nav img { height: 40px; }
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: .2s;
+}
+.nav-links a:hover { background: rgba(255,255,255,.2); }
+
+/* ── Botones compartidos ───────────────────────────────── */
+.btn {
+    display: inline-block;
+    padding: 14px 30px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: .2s;
+    cursor: pointer;
+    border: none;
+}
+.btn-green {
+    background: linear-gradient(135deg, var(--verde-primario), var(--verde-oscuro));
+    color: white;
+    box-shadow: 0 5px 20px rgba(0,168,89,.3);
+}
+.btn-green:hover { transform: translateY(-2px); }
+.btn-blue { background: var(--azul); color: white; }
+.btn-red { background: var(--rojo); color: white; }
+.btn-gray { background: #6c757d; color: white; }
+.btn-orange { background: var(--naranja); color: white; }
+.btn-ghost {
+    background: transparent;
+    border: 2px solid var(--verde-primario);
+    color: var(--verde-primario);
+    box-shadow: none;
+}
+.btn-sm { padding: 6px 14px; font-size: 12px; }

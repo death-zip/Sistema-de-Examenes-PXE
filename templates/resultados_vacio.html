@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Sin resultados{% endblock %}
+{% block body_class %}gradient-bg{% endblock %}
+
+{% block styles %}
+body { display: flex; align-items: center; justify-content: center; }
+.card { background: white; border-radius: 20px; padding: 60px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); border-top: 6px solid var(--verde-primario); }
+img { width: 180px; margin-bottom: 25px; }
+h2 { color: var(--gris-texto); }
+p { color: #aaa; margin: 15px 0; }
+a { color: var(--verde-primario); font-weight: 700; text-decoration: none; }
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="background:white;border-radius:8px;padding:5px 12px;display:inline-flex;align-items:center">
+        <img src="{{ logo_svg }}" style="height:38px">
+    </div>
+    <div style="font-size:48px;opacity:.15">[ ]</div>
+    <h2>No hay respuestas aún</h2>
+    <p>Esperando que los alumnos envíen su examen...</p>
+    <a href="/">← Volver</a>
+</div>
+{% endblock %}
