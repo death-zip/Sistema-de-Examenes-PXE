@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen | Tecmilenio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #00A859 0%, #007A3D 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #00A859, #007A3D); color: white; padding: 25px 30px; display: flex; align-items: center; gap: 20px; }
+        .header img { height: 50px; filter: brightness(0) invert(1); }
+        .header-text h1 { font-size: 24px; margin-bottom: 3px; }
+        .header-text p { font-size: 14px; opacity: .85; }
+        .timer-bar { background: #007A3D; padding: 10px 30px; display: none; align-items: center; justify-content: space-between; }
+        .timer-display { color: white; font-size: 18px; font-weight: 700; font-family: monospace; }
+        .timer-label { color: rgba(255,255,255,.8); font-size: 13px; }
+        .progress-bar { height: 4px; background: rgba(255,255,255,.3); }
+        .progress-fill { height: 100%; background: white; width: 0%; transition: width .3s; }
+        .content { padding: 35px; }
+        .status-conexion { padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; font-weight: 500; }
+        .status-buscando { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        .status-conectado { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .status-error     { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: none; font-weight: 500; }
+        .alert-warning { background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; }
+        .alert-success  { background: #d4edda; border-left: 4px solid #28a745; color: #155724; }
+        .alert-error    { background: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; }
+        /* Resultado */
+        .resultado-card { display: none; border-radius: 15px; padding: 35px; text-align: center; margin-bottom: 30px; border: 3px solid #00A859; background: #f0f9f4; }
+        .resultado-card.visible { display: block; }
+        .resultado-titulo { font-size: 18px; color: #555; margin-bottom: 8px; font-weight: 600; }
+        .resultado-numero { font-size: 80px; font-weight: 900; line-height: 1; margin: 10px 0; color: #00A859; }
+        .resultado-detalle { font-size: 16px; color: #777; margin-top: 8px; }
+        .verde  { color: #28a745 !important; } .naranja { color: #fd7e14 !important; } .rojo { color: #dc3545 !important; }
+        /* Info alumno */
+        .info-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+        .info-section label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
+        .info-section input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .info-section input:focus { outline: none; border-color: #00A859; }
+        /* Preguntas */
+        .question { background: #f8f9fa; padding: 22px; margin-bottom: 22px; border-radius: 10px; border-left: 4px solid #00A859; }
+        .question.abierta { border-left-color: #0d6efd; }
+        .question.seleccion_multiple { border-left-color: #fd7e14; }
+        .question-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .q-num { background: #00A859; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+        .question.abierta .q-num { background: #0d6efd; }
+        .question.seleccion_multiple .q-num { background: #fd7e14; }
+        .q-tipo { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; }
+        .q-tipo-om { background: #e8f5e9; color: #007A3D; }
+        .q-tipo-sm { background: #fff3cd; color: #856404; }
+        .q-tipo-ab { background: #dbeafe; color: #0d6efd; }
+        .q-texto { font-size: 17px; font-weight: 600; color: #2c3e50; line-height: 1.4; }
+        .q-imagen { max-width: 100%; max-height: 280px; border-radius: 8px; margin: 12px 0; display: block; }
+        .option { padding: 11px 14px; margin: 8px 0; cursor: pointer; border-radius: 8px; transition: all .2s; display: flex; align-items: center; gap: 12px; border: 2px solid transparent; }
+        .option:hover { background: #e8f5e9; border-color: #00A859; }
+        .option input { width: 18px; height: 18px; cursor: pointer; accent-color: #00A859; flex-shrink: 0; }
+        .option label { cursor: pointer; font-size: 15px; color: #495057; flex: 1; }
+        .option.correcta { background: #d4edda !important; border-color: #28a745 !important; }
+        .option.incorrecta { background: #f8d7da !important; border-color: #dc3545 !important; }
+        .option.correcta label { color: #155724 !important; font-weight: 600; }
+        .option.incorrecta label { color: #721c24 !important; }
+        textarea.resp-abierta { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 15px; resize: vertical; min-height: 90px; font-family: inherit; }
+        textarea.resp-abierta:focus { outline: none; border-color: #0d6efd; }
+        .submit-section { text-align: center; margin-top: 35px; padding-top: 25px; border-top: 2px solid #e9ecef; }
+        .submit-btn { background: linear-gradient(135deg, #00A859, #007A3D); color: white; border: none; padding: 18px 60px; font-size: 18px; font-weight: 700; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,168,89,.4); transition: all .3s; }
+        .submit-btn:hover { transform: translateY(-2px); }
+        .submit-btn:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+        .loading-wrap { text-align: center; padding: 60px; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #e8f5e9; border-top-color: #00A859; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .footer { background: #007A3D; color: rgba(255,255,255,.7); padding: 15px 30px; text-align: center; font-size: 13px; }
+        @media(max-width:600px) { .content{padding:20px} .header{flex-direction:column;text-align:center} }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/Universidad_Tecmilenio.png" alt="Tecmilenio" onerror="this.style.display='none'">
+        <div class="header-text">
+            <h1 id="exam-titulo">Cargando examen...</h1>
+            <p id="exam-materia"></p>
+        </div>
+    </div>
+    <div class="timer-bar" id="timerBar">
+        <span class="timer-label">⏱ Tiempo restante:</span>
+        <span class="timer-display" id="timerDisplay">--:--</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="content">
+        <div id="statusConexion" class="status-conexion status-buscando">🔍 Buscando servidor automáticamente...</div>
+        <div id="alertContainer"></div>
+        <div class="resultado-card" id="resultadoCard">
+            <div class="resultado-titulo">Tu calificación es</div>
+            <div class="resultado-numero" id="resultadoNumero">-</div>
+            <div class="resultado-detalle" id="resultadoDetalle"></div>
+        </div>
+        <div id="examContent">
+            <div class="loading-wrap">
+                <div class="spinner"></div>
+                <p style="color:#888">Conectando con el servidor...</p>
+            </div>
+        </div>
+    </div>
+    <div class="footer">Tecmilenio &nbsp;|&nbsp; Sistema de Exámenes &nbsp;|&nbsp; Gestión de Redes 2026</div>
+</div>
+
+<script>
+// ── Autodetección de servidor ─────────────────────────────────
+let SERVIDOR = null;
+let CONFIG   = null;
+let timerInterval = null;
+
+function setStatus(msg, tipo) {
+    const el = document.getElementById('statusConexion');
+    el.textContent = msg;
+    el.className = 'status-conexion status-' + tipo;
+}
+
+function detectarIPLocal() {
+    return new Promise(resolve => {
+        try {
+            const pc = new RTCPeerConnection({ iceServers: [] });
+            pc.createDataChannel('');
+            pc.createOffer().then(o => pc.setLocalDescription(o));
+            pc.onicecandidate = e => {
+                if (!e?.candidate) return;
+                const m = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(e.candidate.candidate);
+                if (m && !m[1].startsWith('127.')) { pc.close(); resolve(m[1]); }
+            };
+            setTimeout(() => resolve(null), 1500);
+        } catch { resolve(null); }
+    });
+}
+
+async function generarCandidatos() {
+    const lista = [];
+    const ip = await detectarIPLocal();
+    if (ip) {
+        const base = ip.split('.').slice(0,3).join('.');
+        [1,2,3,4,5,6,7,8,9,10,100,101,102,103,104,105,110,200,201,202,203,210,233]
+            .forEach(s => lista.push(`http://${base}.${s}:5000`));
+    }
+    ['http://10.73.120.233:5000','http://10.74.178.27:5000',
+     'http://192.168.56.1:5000','http://192.168.232.1:5000',
+     'http://192.168.1.1:5000','http://127.0.0.1:5000']
+        .forEach(u => { if (!lista.includes(u)) lista.push(u); });
+    return lista;
+}
+
+async function probar(base) {
+    try {
+        const r = await fetch(base + '/ping', { signal: AbortSignal.timeout(1500) });
+        if (r.ok) { const d = await r.json(); return d.status === 'ok'; }
+    } catch {}
+    return false;
+}
+
+async function buscarServidor() {
+    setStatus('🔍 Buscando servidor automáticamente...', 'buscando');
+    const candidatos = await generarCandidatos();
+    for (const url of candidatos) {
+        const ok = await probar(url);
+        if (ok) { SERVIDOR = url; break; }
+    }
+    if (SERVIDOR) {
+        setStatus('✅ Servidor encontrado: ' + SERVIDOR, 'conectado');
+        await cargarExamen();
+    } else {
+        setStatus('❌ No se encontró servidor. Verifica la conexión.', 'error');
+        document.getElementById('examContent').innerHTML =
+            '<div style="text-align:center;padding:40px;color:#dc3545"><div style="font-size:48px">📡</div><p style="margin-top:15px;font-size:16px">No se pudo conectar al servidor.<br>Avisa al profesor.</p></div>';
+    }
+}
+
+async function cargarExamen() {
+    try {
+        const r = await fetch(SERVIDOR + '/config_examen');
+        CONFIG = await r.json();
+        document.getElementById('exam-titulo').textContent = CONFIG.titulo;
+        document.getElementById('exam-materia').textContent = CONFIG.materia;
+        document.title = CONFIG.titulo + ' | Tecmilenio';
+        renderExamen();
+        if (CONFIG.tiempo_minutos > 0) iniciarTimer(CONFIG.tiempo_minutos * 60);
+    } catch(e) {
+        setStatus('❌ Error al cargar el examen: ' + e.message, 'error');
+    }
+}
+
+// ── Timer ─────────────────────────────────────────────────────
+function iniciarTimer(segundos) {
+    const bar = document.getElementById('timerBar');
+    bar.style.display = 'flex';
+    const total = segundos;
+    function actualizar() {
+        const m = Math.floor(segundos / 60);
+        const s = segundos % 60;
+        document.getElementById('timerDisplay').textContent =
+            String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+        const pct = (segundos / total) * 100;
+        document.getElementById('timerDisplay').style.color =
+            segundos < 60 ? '#ff6b6b' : (segundos < 300 ? '#ffd93d' : 'white');
+        if (segundos <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById('timerDisplay').textContent = '00:00';
+            document.querySelector('.submit-btn')?.click();
+        }
+        segundos--;
+    }
+    actualizar();
+    timerInterval = setInterval(actualizar, 1000);
+}
+
+// ── Renderizar examen ─────────────────────────────────────────
+function renderExamen() {
+    const cont = document.getElementById('examContent');
+    let html = `<div class="info-section">
+        <label for="nombre">👤 Nombre completo del estudiante:</label>
+        <input type="text" id="nombre" required placeholder="Ej: Juan Pérez García" autocomplete="name">
+    </div>`;
+
+    CONFIG.preguntas.forEach((p, idx) => {
+        const tipos = { opcion_multiple:'om', seleccion_multiple:'sm', abierta:'ab' };
+        const tipoLabel = { opcion_multiple:'Opción múltiple', seleccion_multiple:'Selección múltiple', abierta:'Respuesta abierta' };
+        const imgHTML = p.imagen
+            ? `<img src="${p.imagen.startsWith('data:') || p.imagen.startsWith('http') ? p.imagen : SERVIDOR+'/imagen/'+p.imagen}" class="q-imagen" alt="Imagen pregunta">`
+            : '';
+        let respHTML = '';
+        if (p.tipo === 'abierta') {
+            respHTML = `<textarea class="resp-abierta" id="resp_${p.id}" placeholder="Escribe tu respuesta aquí..."></textarea>`;
+        } else {
+            const inputType = p.tipo === 'seleccion_multiple' ? 'checkbox' : 'radio';
+            respHTML = (p.opciones||[]).map(op => `
+                <div class="option">
+                    <input type="${inputType}" id="op_${p.id}_${op.id}" name="q${p.id}" value="${op.id}">
+                    <label for="op_${p.id}_${op.id}">${op.texto}</label>
+                </div>`).join('');
+        }
+        html += `
+        <div class="question ${p.tipo}" id="preg_${p.id}">
+            <div class="question-header">
+                <div class="q-num">${idx+1}</div>
+                <span class="q-tipo q-tipo-${tipos[p.tipo]}">${tipoLabel[p.tipo]}</span>
+                <span style="color:#aaa;font-size:13px;margin-left:auto">${p.puntos||1} pt${(p.puntos||1)>1?'s':''}</span>
+            </div>
+            <div class="q-texto">${p.texto}</div>
+            ${imgHTML}
+            <div style="margin-top:12px">${respHTML}</div>
+        </div>`;
+    });
+
+    html += `<div class="submit-section">
+        <button type="button" class="submit-btn" onclick="enviarExamen()">📤 Enviar Examen</button>
+    </div>`;
+    cont.innerHTML = html;
+
+    // Progreso al hacer scroll
+    window.addEventListener('scroll', () => {
+        const docH = document.documentElement.scrollHeight - window.innerHeight;
+        if (docH > 0) document.getElementById('progressFill').style.width = (window.scrollY/docH*100) + '%';
+    });
+}
+
+// ── Recolectar respuestas ─────────────────────────────────────
+function recolectarRespuestas() {
+    const resp = {};
+    CONFIG.preguntas.forEach(p => {
+        if (p.tipo === 'abierta') {
+            resp['pregunta_' + p.id] = document.getElementById('resp_' + p.id)?.value || '';
+        } else if (p.tipo === 'seleccion_multiple') {
+            resp['pregunta_' + p.id] = [...document.querySelectorAll(`input[name="q${p.id}"]:checked`)].map(i=>i.value);
+        } else {
+            const sel = document.querySelector(`input[name="q${p.id}"]:checked`);
+            resp['pregunta_' + p.id] = sel ? sel.value : '';
+        }
+    });
+    return resp;
+}
+
+function verificarCompleto(respuestas) {
+    for (const p of CONFIG.preguntas) {
+        const r = respuestas['pregunta_' + p.id];
+        if (p.tipo === 'abierta') { if (!r || r.trim() === '') return p.id; }
+        else if (p.tipo === 'seleccion_multiple') { if (!r || r.length === 0) return p.id; }
+        else { if (!r) return p.id; }
+    }
+    return null;
+}
+
+// ── Mostrar resultado ─────────────────────────────────────────
+function mostrarResultado(cal, correctas, total, respCorrectas) {
+    const card   = document.getElementById('resultadoCard');
+    const numEl  = document.getElementById('resultadoNumero');
+    const detEl  = document.getElementById('resultadoDetalle');
+    numEl.textContent = parseFloat(cal).toFixed(1);
+    detEl.textContent = `Obtuviste ${correctas} de ${total} puntos`;
+    numEl.className = 'resultado-numero ' + (cal>=8?'verde':cal>=6?'naranja':'rojo');
+    card.style.borderColor = cal>=8?'#28a745':cal>=6?'#fd7e14':'#dc3545';
+    card.classList.add('visible');
+
+    // Marcar correctas/incorrectas (solo opción múltiple y selección múltiple)
+    if (respCorrectas) {
+        CONFIG.preguntas.forEach(p => {
+            if (p.tipo === 'abierta') return;
+            const correcta = respCorrectas['pregunta_' + p.id];
+            document.querySelectorAll(`input[name="q${p.id}"]`).forEach(input => {
+                const div = input.closest('.option');
+                const esCorrecta = Array.isArray(correcta)
+                    ? correcta.includes(input.value)
+                    : input.value === correcta;
+                const seleccionada = input.checked;
+                if (esCorrecta) div.classList.add('correcta');
+                else if (seleccionada && !esCorrecta) div.classList.add('incorrecta');
+            });
+        });
+    }
+}
+
+function mostrarAlerta(msg, tipo) {
+    const el = document.createElement('div');
+    el.className = 'alert alert-' + tipo;
+    el.textContent = msg;
+    el.style.display = 'block';
+    const cont = document.getElementById('alertContainer');
+    cont.innerHTML = '';
+    cont.appendChild(el);
+    if (tipo !== 'warning') setTimeout(() => el.style.display='none', 7000);
+}
+
+// ── Enviar examen ─────────────────────────────────────────────
+async function enviarExamen() {
+    const nombre = document.getElementById('nombre')?.value?.trim();
+    if (!nombre) { mostrarAlerta('⚠️ Por favor escribe tu nombre completo', 'warning'); return; }
+
+    const respuestas = recolectarRespuestas();
+    const incompleta = verificarCompleto(respuestas);
+    if (incompleta) {
+        mostrarAlerta('⚠️ Por favor responde todas las preguntas. Falta la pregunta ' + incompleta, 'warning');
+        document.getElementById('preg_' + incompleta)?.scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+
+    const datos = {
+        nombre,
+        timestamp: new Date().toLocaleString('es-MX'),
+        respuestas
+    };
+
+    const btn = document.querySelector('.submit-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Enviando...';
+    if (timerInterval) clearInterval(timerInterval);
+
+    try {
+        mostrarAlerta('📤 Enviando examen al servidor...', 'warning');
+        const r = await fetch(SERVIDOR + '/guardar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos),
+            signal: AbortSignal.timeout(8000)
+        });
+        if (r.ok) {
+            const d = await r.json();
+            btn.textContent = '✓ Examen Enviado';
+            btn.style.background = '#28a745';
+        yaEnvio = true;
+            mostrarResultado(d.calificacion, d.correctas, d.total, null);
+
+            // Pedir respuestas correctas para marcar
+            try {
+                const rc = await fetch(SERVIDOR + '/respuestas_correctas');
+                if (rc.ok) {
+                    const rdata = await rc.json();
+                    mostrarResultado(d.calificacion, d.correctas, d.total, rdata);
+                }
+            } catch {}
+
+            mostrarAlerta('✅ Examen enviado correctamente', 'success');
+            document.querySelectorAll('input,textarea').forEach(i => i.disabled=true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else { throw new Error('Error servidor'); }
+    } catch(e) {
+        // Aunque falle el servidor, mostrar resultado local
+        mostrarAlerta('⚠️ Examen terminado. No se pudo guardar en el servidor, avisa al profesor.', 'error');
+        btn.disabled = true;
+        btn.textContent = '✓ Examen Completado';
+        btn.style.background = '#fd7e14';
+        document.querySelectorAll('input,textarea').forEach(i => i.disabled=true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+window.addEventListener('beforeunload', e => {
+    const btn = document.querySelector('.submit-btn');
+    const resp = document.querySelectorAll('input[type=radio]:checked, input[type=checkbox]:checked').length;
+    if (resp > 0 && btn && !btn.disabled) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ── Arrancar ──────────────────────────────────────────────────
+buscarServidor();
+// ── Polling de estado del examen ─────────────────────────────
+let versionActual = -1;
+let yaEnvio = false;
+
+function crearOverlay() {
+    if (document.getElementById('overlayEditando')) return;
+    const ov = document.createElement('div');
+    ov.id = 'overlayEditando';
+    ov.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.65); z-index: 9999;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        backdrop-filter: blur(3px);
+    `;
+    ov.innerHTML = `
+        <div style="background:white; border-radius:20px; padding:45px 50px; text-align:center;
+                    box-shadow:0 20px 60px rgba(0,0,0,.4); max-width:420px; width:90%">
+            <div style="font-size:56px; margin-bottom:15px">✏️</div>
+            <h2 style="color:#007A3D; font-size:24px; margin-bottom:12px">Examen en configuración</h2>
+            <p style="color:#666; font-size:15px; line-height:1.6; margin-bottom:20px">
+                El docente está modificando el examen.<br>
+                Por favor espera, la página se actualizará automáticamente cuando esté listo.
+            </p>
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; color:#00A859; font-weight:600">
+                <div style="width:14px;height:14px;background:#00A859;border-radius:50%;animation:pulse2 1.5s infinite"></div>
+                Actualizando...
+            </div>
+        </div>
+        <style>@keyframes pulse2{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.2)}}</style>
+    `;
+    document.body.appendChild(ov);
+    // Bloquear scroll
+    document.body.style.overflow = 'hidden';
+}
+
+function quitarOverlay() {
+    const ov = document.getElementById('overlayEditando');
+    if (ov) ov.remove();
+    document.body.style.overflow = '';
+}
+
+async function checkEstado() {
+    if (!SERVIDOR || yaEnvio) return;
+    try {
+        const r = await fetch(SERVIDOR + '/estado_examen', { signal: AbortSignal.timeout(2000) });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.editando) {
+            crearOverlay();
+        } else {
+            quitarOverlay();
+            // Si la versión cambió, recargar el examen
+            if (versionActual !== -1 && d.version !== versionActual) {
+                location.reload();
+            }
+            versionActual = d.version;
+        }
+    } catch(e) {}
+}
+
+// Polling cada 3 segundos
+setInterval(checkEstado, 3000);
+
+</script>
+</body>
+</html>
