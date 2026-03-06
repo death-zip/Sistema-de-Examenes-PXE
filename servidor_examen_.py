@@ -4,7 +4,7 @@ import json, os, socket, base64, io
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'tecmilenio_examenes_2026'
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 CORS(app, supports_credentials=True)
 
 # ── Carpetas ──────────────────────────────────────────────────
@@ -23,7 +23,7 @@ def estado_examen():
     return jsonify(_estado_edicion)
 
 CONFIG_FILE  = 'config_examen.json'
-ADMIN_PASS   = 'admin123'   # ← Cambia esta contraseña
+ADMIN_PASS   = os.environ.get('ADMIN_PASS', 'admin123')
 
 CONFIG_DEFAULT = {
     "titulo": "Examen de Pensamiento Crítico",
@@ -970,7 +970,8 @@ if __name__ == '__main__':
     for ip in ips:
         print(f'   -- http://{ip}:5000         \033[90m← Página principal\033[0m')
         print(f'   -- http://{ip}:5000/ver     \033[90m← Resultados públicos\033[0m')
-        print(f'   -- http://{ip}:5000/admin   \033[90m← Panel docente (contraseña: {ADMIN_PASS})\033[0m')
+        admin_hint = ADMIN_PASS if ADMIN_PASS == 'admin123' else '(definida en variable de entorno)'
+        print(f'   -- http://{ip}:5000/admin   \033[90m← Panel docente (contraseña: {admin_hint})\033[0m')
         print()
     print('INFO: Instala openpyxl para descarga Excel:  pip install openpyxl')
     print('Presiona Ctrl+C para detener\n')

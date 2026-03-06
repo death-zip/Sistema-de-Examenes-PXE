@@ -1,0 +1,5 @@
+.env
+__pycache__/
+*.pyc
+respuestas/
+config_examen.json
